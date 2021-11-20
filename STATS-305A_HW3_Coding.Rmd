@@ -159,10 +159,10 @@ fitKRR <- function(X = NULL, y = NULL,
   # getting alpha_hat
   y_centered <- y - mean(y)
   G <- gram_matrix(X, tau)
-  inv_arg <- t(G) %*% G + lambda * G
+  id <- diag(rep(1, dim(G)[1]))
+  inv_arg <- G + lambda * id
   inv <- solve(inv_arg)
-  GT_Y <- t(G) %*% y_centered
-  alpha_hat <- inv %*% GT_Y
+  alpha_hat <- inv %*% y_centered
   
   # getting yMean
   y_hat_centered <- G %*% alpha_hat
@@ -175,7 +175,7 @@ fitKRR <- function(X = NULL, y = NULL,
 
 
 
-c) Next, we perform kernel ridge regression using lpsa as the response and lcavol as the only covariate x, with $\tau = 0.1$ fixed:
+c) Next, we perform kernel ridge regression using lpsa as the response and lcavol as the only covariate x, with $\tau = 0.1$ fixed. For all plots generated, we remark that the green points are the predictions.
 
 ```{r tau_1_lambda_1}
 
@@ -184,30 +184,32 @@ y = as.matrix(lprostate_data[,"lpsa"])
 X = as.matrix(lprostate_data[,"lcavol"])
 X_scaled = scale(X)
 
-alpha_hat_1 <- unlist(fitKRR(X = X_scaled, y = t(y), tau = 0.1, lambda = 0.01)[1])
+alpha_hat_1 <- unlist(fitKRR(X = t(X_scaled), y = y, tau = 0.1, lambda = 0.01)[1])
 
 y_hat_1 <- predictKRR(X = t(X_scaled), Z = t(X_scaled), alpha = alpha_hat_1, 
                       tau = 0.1, offset = mean(y))
 
-plot_data_1 <- as.data.frame(cbind(X_scaled, y, y_hat_1))
+plot_data_1 <- as.data.frame(cbind(X, y, y_hat_1))
 
 ggplot(plot_data_1,
        aes(x = V1, y = V2)) + 
   geom_point(aes(x = V1, y = V2))+
   geom_point(aes(x = V1, 
                 y = y_hat_1), color = "green")+
-  xlab("lcavol (scaled)") +
+  xlab("lcavol") +
   ylab("lpsa") + 
   theme_bw() +
   theme(axis.text.x=element_text(size=8), 
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())+
-  ggtitle("Predictions for tau = 0.1, lambda = 0.01")
+  ggtitle("tau = 0.1, lambda = 0.01 (predictions in green)")
 
 
 
 
 ```
+
+
 
 
 ```{r tau_1_lambda_2}
@@ -216,7 +218,7 @@ y = as.matrix(lprostate_data[,"lpsa"])
 X = as.matrix(lprostate_data[,"lcavol"])
 X_scaled = scale(X)
 
-alpha_hat_1 <- unlist(fitKRR(X = X_scaled, y = t(y), tau = 0.1, lambda = 0.5)[1])
+alpha_hat_1 <- unlist(fitKRR(X = t(X_scaled), y = y, tau = 0.1, lambda = 0.5)[1])
 
 y_hat_1 <- predictKRR(X = t(X_scaled), Z = t(X_scaled), alpha = alpha_hat_1, 
                       tau = 0.1, offset = mean(y))
@@ -234,7 +236,7 @@ ggplot(plot_data_1,
   theme(axis.text.x=element_text(size=8), 
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())+
-  ggtitle("Predictions for tau = 0.1, lambda = 0.5")
+  ggtitle("tau = 0.1, lambda = 0.5 (predictions in green)")
 
 ```
 
@@ -264,9 +266,11 @@ ggplot(plot_data_1,
   theme(axis.text.x=element_text(size=8), 
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())+
-  ggtitle("Predictions for tau = 0.1, lambda = 5")
+  ggtitle("tau = 0.1, lambda = 5 (predictions in green)")
 
 ```
+
+From the 3 plots above, we see that as lambda increases, the predictions move closer to the line of best fit. This is expected, as with increased regularization, variance is sharply decreasing with slow increase in bias, reducing overall MSE.  
 
 
 
@@ -281,7 +285,7 @@ y = as.matrix(lprostate_data[,"lpsa"])
 X = as.matrix(lprostate_data[,"lcavol"])
 X_scaled = scale(X)
 
-alpha_hat_1 <- unlist(fitKRR(X = X_scaled, y = t(y), tau = 0.5, lambda = 0.01)[1])
+alpha_hat_1 <- unlist(fitKRR(X = t(X_scaled), y = y, tau = 0.5, lambda = 0.01)[1])
 
 y_hat_1 <- predictKRR(X = t(X_scaled), Z = t(X_scaled), alpha = alpha_hat_1, 
                       tau = 0.5, offset = mean(y))
@@ -299,7 +303,7 @@ ggplot(plot_data_1,
   theme(axis.text.x=element_text(size=8), 
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())+
-  ggtitle("Predictions for tau = 0.5, lambda = 0.01")
+  ggtitle("tau = 0.5, lambda = 0.01 (predictions in green)")
 
 
 
@@ -313,7 +317,7 @@ y = as.matrix(lprostate_data[,"lpsa"])
 X = as.matrix(lprostate_data[,"lcavol"])
 X_scaled = scale(X)
 
-alpha_hat_1 <- unlist(fitKRR(X = X_scaled, y = t(y), tau = 0.5, lambda = 0.5)[1])
+alpha_hat_1 <- unlist(fitKRR(X = t(X_scaled), y = y, tau = 0.5, lambda = 0.5)[1])
 
 y_hat_1 <- predictKRR(X = t(X_scaled), Z = t(X_scaled), alpha = alpha_hat_1, 
                       tau = 0.5, offset = mean(y))
@@ -331,7 +335,7 @@ ggplot(plot_data_1,
   theme(axis.text.x=element_text(size=8), 
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())+
-  ggtitle("Predictions for tau = 0.5, lambda = 0.5")
+  ggtitle("tau = 0.5, lambda = 0.5 (predictions in green)")
 
 ```
 
@@ -343,7 +347,7 @@ y = as.matrix(lprostate_data[,"lpsa"])
 X = as.matrix(lprostate_data[,"lcavol"])
 X_scaled = scale(X)
 
-alpha_hat_1 <- unlist(fitKRR(X = X_scaled, y = t(y), tau = 0.5, lambda = 5)[1])
+alpha_hat_1 <- unlist(fitKRR(X = t(X_scaled), y = y, tau = 0.5, lambda = 5)[1])
 
 y_hat_1 <- predictKRR(X = t(X_scaled), Z = t(X_scaled), alpha = alpha_hat_1, 
                       tau = 0.5, offset = mean(y))
@@ -361,10 +365,12 @@ ggplot(plot_data_1,
   theme(axis.text.x=element_text(size=8), 
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())+
-  ggtitle("Predictions for tau = 0.5, lambda = 5")
+  ggtitle("tau = 0.5, lambda = 5 (predictions in green)")
 
 ```
 
+
+The same phenomenon as in part c) is observable here as well but to a lesser extent. This is because with tau = 0.5, we allow for a less flexible fit, and this also aligns with problem 2d) where we showed that as tau goes to 0, the predictions increasingly become the response values themselves. So as we moved from tau = 0.1 to tau = 0.5, we moved away from predictions tending to be the data points, and to a less flexible fit, reducing overfitting.
 
 
 
@@ -397,7 +403,7 @@ ggplot(plot_data_1,
   theme(axis.text.x=element_text(size=8), 
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())+
-  ggtitle("Predictions for tau = 0.5, lambda = 0.01, all covariates")
+  ggtitle("tau = 0.5, lambda = 0.01, all covariates (predictions in green)")
 
 
 
@@ -426,13 +432,13 @@ ggplot(plot_data_1,
   geom_point(aes(x = V1, y = V2))+
   geom_point(aes(x = V1, 
                 y = y_hat_1), color = "green")+
-  xlab("lcavol (scaled)") +
+  xlab("lcavol") +
   ylab("lpsa") + 
   theme_bw() +
   theme(axis.text.x=element_text(size=8), 
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())+
-  ggtitle("Predictions for tau = 0.5, lambda = 0.5, all covariates")
+  ggtitle("tau = 0.5, lambda = 0.5, all covariates (predictions in green)")
 
 
 
@@ -460,39 +466,127 @@ ggplot(plot_data_1,
   geom_point(aes(x = V1, y = V2))+
   geom_point(aes(x = V1, 
                 y = y_hat_1), color = "green")+
-  xlab("lcavol (scaled)") +
+  xlab("lcavol") +
   ylab("lpsa") + 
   theme_bw() +
   theme(axis.text.x=element_text(size=8), 
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())+
-  ggtitle("Predictions for tau = 0.5, lambda = 5.0, all covariates")
+  ggtitle("tau = 0.5, lambda = 5.0, all covariates (predictions in green)")
 
 
 
 
 ```
 
+From the 3 plots above, with small lambda (0.01), we see classic overfitting, since there is veery little regularization and we are using a complex model with 8 covariates. As regularization increases with lambda values increasing from 0.01 to 0.5 to 5.0, we see that the overfitting reduces and the predictions tend to be closer to the line of best fit. The lambda = 0.5 case seems to be a middle ground where there does not seem to be overfitting, but the model is also not too rigid as seems to be the case slightly with lambda = 5.0. 
 
 
-f) First we calculate the sigma hat squared
 
-```{r}
+f) First we calculate the sigma hat squared from the formula given in the homework. To do that, we first have to run the model using all covariates as in the previous part but with lambda = 0.1:
+
+```{r reg_output}
 
 y = as.matrix(lprostate_data[,"lpsa"])
 
 X = as.matrix(lprostate_data[,-9])
 X_scaled = scale(X)
 
+alpha_hat_1 <- unlist(fitKRR(X = t(X_scaled), y = y, tau = 0.5, lambda = 0.1)[1])
 
-
+y_hat_1 <- predictKRR(X = t(X_scaled), Z = t(X_scaled), alpha = alpha_hat_1, 
+                      tau = 0.5, offset = mean(y))
 
 
 
 ```
 
+That gives us the y_hat's needed. Next we need the H_lambda matrix:
+
+```{r h_lambda}
+
+G <- gram_matrix(t(X_scaled), bandwidth = 0.5)
+
+id <- diag(rep(1, dim(G)[1]))
+inv_arg <- G + 0.1 * id
+inv <- solve(inv_arg)
+
+H_lambda <- G %*% inv
+H_lambda_squared <- H_lambda %*% H_lambda 
+
+```
+
+Now, we are ready to calculate sigma_hat_squared:
 
 
+```{r sigma_hat_squared}
 
+diff <- y_hat_1 - y
+norm_sq <- sum(diff^2)
+n <- dim(G)[1]
+
+denom <- n - 2*tr(H_lambda) + tr(H_lambda_squared)
+
+sigma_hat_squared <- (1/denom)*norm_sq
+
+sigma_hat_squared
+```
+
+We output the sigma_hat_squared value as above. 
+
+Next, we fit a one-covariate model again, as in part d):
+
+```{r one_covariate}
+
+y = as.matrix(lprostate_data[,"lpsa"])
+
+X = as.matrix(lprostate_data[,"lcavol"])
+X_scaled = scale(X)
+
+alpha_hat_1 <- unlist(fitKRR(X = t(X_scaled), y = y, tau = 0.5, lambda = 0.5)[1])
+
+y_hat_1 <- predictKRR(X = t(X_scaled), Z = t(X_scaled), alpha = alpha_hat_1, 
+                      tau = 0.5, offset = mean(y))
+
+```
+
+
+Now, to estimate the standard error of the predictions, we use the expression $Var(\hat{y}) = Var(H_{\lambda}y) = H_{\lambda}Var(y)H_{\lambda}^T$. We already know that the Variance of y is $\sigma^2$, which we have already estimated from the full-model with all covariates. The standard error is the square root of the variance of y_hat. So we can perform the calculation now:
+
+```{r std_errors}
+
+G <- gram_matrix(t(X_scaled), bandwidth = 0.5)
+
+id <- diag(rep(1, dim(G)[1]))
+inv_arg <- G + 0.1 * id
+inv <- solve(inv_arg)
+
+H_lambda <- G %*% inv
+
+HHT <- H_lambda %*% t(H_lambda)
+
+std_errors <- sqrt(sigma_hat_squared * diag(HHT))
+
+plot_data_1 <- as.data.frame(cbind(X_scaled[,1], y, y_hat_1))
+
+ggplot(plot_data_1,
+       aes(x = V1, y = V2)) + 
+  geom_point(aes(x = V1, y = V2), color = "blue")+
+  geom_point(aes(x = V1, 
+                y = y_hat_1), color = "green")+
+  geom_errorbar(aes(ymin = y_hat_1 - 2*std_errors,
+                    ymax = y_hat_1 + 2*std_errors), width = 0.04)+
+  xlab("lcavol") +
+  ylab("lpsa") + 
+  theme_bw() +
+  theme(axis.text.x=element_text(size=8), 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank())+
+  ggtitle("tau = 0.5, lambda = 0.5 (predictions in green) with standard error bars")
+
+
+```
+
+In the plot above, the blue points are the training data points, the green points are the predictions, and the error bars are calculated using 2 times the estimated standard errors. Details of the estimated standard errors calculation is given above. 
 
 
